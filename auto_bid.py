@@ -16,24 +16,17 @@ def main(argv):
         elif opt in ('-p', '--percent'):
             target_roas = float(arg)
     df = pd.read_csv(input_file)
-    baselines = df.groupby(['campaign_name', 'country_name']).sum().reset_index()
-    df['unadjusted_bid'] = df.apply(lambda x: get_baselines(x['iap_revenue_7d'], x['installs'], target_roas), axis=1)
-    baselines['base_bid'] = baselines.apply(lambda x: get_baselines(x['iap_revenue_7d'], x['installs'], target_roas), axis=1)
-    df = df.join(baselines[['campaign_name', 'base_bid']].set_index('campaign_name'), on='campaign_name')
-    df['final_bid_value'] = df.apply(lambda x: apply_bid_logic(x['unadjusted_bid'], x['installs'], x['base_bid']), axis=1)
+    baselines = df.groupby(['Campaign Name', 'Country']).sum().reset_index()
+    df['unadjusted_bid'] = df.apply(lambda x: get_baselines(x['D7 IAP Revenue'], x['Installs'], 0.6), axis=1)
+    baselines['base_bid'] = baselines.apply(lambda x: get_baselines(x['D7 IAP Revenue'], x['Installs'], 0.6), axis=1)
+    df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
+    df['final_bid_value'] = df.apply(lambda x: apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid']), axis=1)
     df = df.round(2)
-    campaigns = df['campaign_id'].unique()
-    for campaign in campaigns:
-        subset = df[df['campaign_id'] == campaign][['campaign_id','campaign_name', 'application_id', 'application_name', 'country_name','final_bid_value']]
-        subset_renamed = subset.rename(columns={'campaign_id':'Campaign ID',
-                                           'campaign_name':'Campaign Name',
-                                           'application_id':'Application ID',
-                                           'application_name':'Application name',
-                                            'country_name':'Country',
-                                            'final_bid_value':'Bid'
-                                           })
-        campaign_name = subset_renamed['Campaign Name'].iloc[0]
-        subset_renamed.to_csv('{}_{}_bid.csv'.format(campaign, campaign_name))
+    list_of_dfs = [df.loc[i:i+100000-1,:] for i in range(0, len(df),100000)]
+    for i in range(len(list_of_dfs)):
+        list_of_dfs[i]['Bid'] = list_of_dfs[i]['final_bid_value']
+        list_of_dfs[i].iloc[:, :-3].to_csv('bids_{}.csv'.format(i))
+
 
 def get_baselines(revenue, installs, target_percent):
     if installs != 0:
