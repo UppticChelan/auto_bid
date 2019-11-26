@@ -1,0 +1,7 @@
+channel,ironsource
+bid_calc_method,default
+target,0.6
+group_cols,Campaign Name|Country
+max_bid_cap,default
+min_bid_cap,0.01
+install_threshold,50
