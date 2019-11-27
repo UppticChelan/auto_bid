@@ -47,6 +47,6 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
 
 def format_csv(df, Ruleset, path, output_name):
     if Ruleset.output_format == 'ironsource':
-        df.iloc[:, :-3].to_csv(path + '{}'.format(output_name))
+        df.to_csv(path + '{}'.format(output_name))
     else:
         return "Invalid output format."
