@@ -52,7 +52,7 @@ def run_autobid(path, filename):
     df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
-    df['final_bid_value'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+    df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     ruleset.format_csv(df, rules, app.config['DOWNLOAD_FOLDER'], filename)
     output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'rb')
