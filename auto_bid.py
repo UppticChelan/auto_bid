@@ -26,10 +26,7 @@ def main(argv):
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
     df['final_bid_value'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
-    list_of_dfs = [df.loc[i:i+100000-1,:] for i in range(0, len(df),100000)]
-    for i in range(len(list_of_dfs)):
-        list_of_dfs[i]['Bid'] = list_of_dfs[i]['final_bid_value']
-        list_of_dfs[i].iloc[:, :-3].to_csv('bids_{}.csv'.format(i))
+    ruleset.format_csv(df, rules)
 
 
 def get_baselines(revenue, installs, target_percent):
