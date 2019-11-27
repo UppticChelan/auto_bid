@@ -42,6 +42,19 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
             return bid
         else:
             return bid
+    elif float(Ruleset.max) > 0:
+        max_bid = float(Ruleset.max)
+        if bid > max_bid:
+            bid = max_bid
+            return bid
+        elif installs < Ruleset.install_threshold:
+            bid = baseline
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            return bid
     else:
         return "Invalid max bid value."
 
