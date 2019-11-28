@@ -39,18 +39,34 @@ def get_baselines(revenue, installs, target_percent):
         target_cpi = 0.01
     return target_cpi
 
-def apply_bid_logic(bid, installs, baseline):
-    if bid > baseline * 2:
-        bid = baseline * 2
-        return bid
-    elif installs < 50:
-        bid = baseline
-        return bid
-    elif bid < 0.01:
-        bid = 0.01
-        return bid
+def apply_bid_logic(bid,installs, baseline, Ruleset):
+    if Ruleset.max == 'default':
+        if bid > baseline * 2:
+            bid = baseline * 2
+            return bid
+        elif installs < Ruleset.install_threshold:
+            bid = baseline
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            return bid
+    elif float(Ruleset.max) > 0:
+        max_bid = float(Ruleset.max)
+        if bid > max_bid:
+            bid = max_bid
+            return bid
+        elif installs < Ruleset.install_threshold:
+            bid = baseline
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            return bid
     else:
-        return bid
+        return "Invalid max bid value."
 
 if __name__ == '__main__':
    main(sys.argv[1:])

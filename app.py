@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 from auto_bid import get_baselines, apply_bid_logic
 import pandas as pd
 import ruleset
+import boto3
+from botocore.client import Config
 
 #When there are more rulesets, ruleset will be set to another value when options are checked
 UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/uploads/'
@@ -48,19 +50,18 @@ def run_autobid(path, filename):
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
     group_cols = rules.groupby.split('|')
+    df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     baselines = df.groupby(group_cols).sum().reset_index()
-    df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
-    baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
+    df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
+    baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
     df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     ruleset.format_csv(df, rules, app.config['DOWNLOAD_FOLDER'], filename)
     output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'rb')
 
-
-
 @app.route('/uploads/<filename>')
-def uploaded_file(filename):
+def uploaded_file():
     return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
 
 
