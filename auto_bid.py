@@ -20,10 +20,12 @@ def main(argv):
     df['original_bid'] = df['Bid']
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
+    df = ruleset.format_cols_input(df, rules)
+    df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     group_cols = rules.groupby.split('|')
     baselines = df.groupby(group_cols).sum().reset_index()
-    df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
-    baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
+    df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
+    baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
     df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
@@ -42,11 +44,11 @@ def get_baselines(revenue, installs, target_percent):
 
 def apply_bid_logic(bid,installs, baseline, Ruleset):
     if Ruleset.max == 'default':
-        if bid > baseline * 2.2:
-            bid = baseline * 2.2
-            return bid
-        elif installs < Ruleset.install_threshold:
+        if installs < Ruleset.install_threshold:
             bid = baseline
+            return bid
+        elif bid > baseline * 2.2:
+            bid = baseline * 2.2
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min
@@ -55,11 +57,11 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
             return bid
     elif float(Ruleset.max) > 0:
         max_bid = float(Ruleset.max)
-        if bid > max_bid:
-            bid = max_bid
-            return bid
-        elif installs < Ruleset.install_threshold:
+        if installs < Ruleset.install_threshold:
             bid = baseline
+            return bid
+        elif bid > baseline * 2.2:
+            bid = baseline * 2.2
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min

@@ -1,4 +1,4 @@
-channel,ironsource
+input,ironsource_dash
 bid_calc_method,default
 target,0.66
 group_cols,Campaign Name|Country

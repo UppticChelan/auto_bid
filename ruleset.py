@@ -8,7 +8,7 @@ class Ruleset():
             reader = csv.reader(infile)
             rules_dict = {rows[0]:rows[1] for rows in reader}
         self.rulesdict = rules_dict
-        self.output_format = rules_dict['channel']
+        self.input = rules_dict['input']
         self.bid_calc_function = rules_dict['bid_calc_method']
         self.target = float(rules_dict['target'])
         self.groupby = rules_dict['group_cols']
@@ -31,11 +31,11 @@ def get_baselines(revenue, installs, Ruleset):
 
 def apply_bid_logic(bid,installs, baseline, Ruleset):
     if Ruleset.max == 'default':
-        if bid > baseline * 2:
-            bid = baseline * 2
-            return bid
-        elif installs < Ruleset.install_threshold:
+        if installs < Ruleset.install_threshold:
             bid = baseline
+            return bid
+        elif bid > baseline * 2.2:
+            bid = baseline * 2.2
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min
@@ -44,11 +44,11 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
             return bid
     elif float(Ruleset.max) > 0:
         max_bid = float(Ruleset.max)
-        if bid > max_bid:
-            bid = max_bid
-            return bid
-        elif installs < Ruleset.install_threshold:
+        if installs < Ruleset.install_threshold:
             bid = baseline
+            return bid
+        elif bid > baseline * 2.2:
+            bid = baseline * 2.2
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min
@@ -57,3 +57,8 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
             return bid
     else:
         return "Invalid max bid value."
+
+def format_cols_input(df, ruleset):
+    if ruleset.input == 'aquired':
+        df.rename(columns={"Campaign": "Campaign Name", "D7 Total Revenue": "d7_total_revenue"})
+    return df

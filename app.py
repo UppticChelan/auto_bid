@@ -9,7 +9,7 @@ import boto3
 from botocore.client import Config
 from io import StringIO
 
-s3 = boto3.resource('s3', aws_access_key_id= os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),config=Config(signature_version='s3v4')
+s3 = boto3.resource('s3', aws_access_key_id= os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),config=Config(signature_version='s3v4'))
 ALLOWED_EXTENSIONS = {'csv'}
 RULESET = os.path.dirname(os.path.abspath(__file__)) + 'ruless.csv'
 
@@ -31,18 +31,13 @@ def index():
             print('No file selected')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            processed = process_file(filename)
-            return redirect(url_for('uploaded_file', filename=filename))
+            df = pd.read_csv(file)
+            processed = run_autobid(df)
+            return redirect(url_for('download'))
     return render_template('index.html')
 
 
-def process_file(path, filename):
-    #here is probably where to add update to channel
-    run_autobid(path, filename)
-
-def run_autobid(path, filename):
-    df = pd.read_csv(path)
+def run_autobid(df):
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
     group_cols = rules.groupby.split('|')
@@ -53,12 +48,21 @@ def run_autobid(path, filename):
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
     df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
-    ruleset.format_csv(df, rules, app.config['DOWNLOAD_FOLDER'], filename)
-    s3.Bucket(os.environ.get('S3_BUCKET')).put_object(Key='file', Body=f, ContentEncoding='text/csv')
+    bucket = os.environ.get('S3_BUCKET')
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer)
+    s3_resource = boto3.resource('s3')
+    s3_resource.Object(bucket, 'df.csv').put(Body=csv_buffer.getvalue())
 
-@app.route('/uploads/<filename>')
-def uploaded_file():
-    return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
+@app.route('/download')
+def download():
+    file = s3.get_object(Bucket=os.environ.get('S3_BUCKET'), Key='df.csv')
+    return Response(
+        file['Body'].read(),
+        mimetype='text/plain',
+        headers={"Content-Disposition": "attachment;filename=df.csv"}
+    )
+
 
 
 if __name__ == '__main__':
