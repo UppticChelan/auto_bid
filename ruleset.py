@@ -57,9 +57,3 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
             return bid
     else:
         return "Invalid max bid value."
-
-def format_csv(df, Ruleset, path, output_name):
-    if Ruleset.output_format == 'ironsource':
-        df.to_csv(path + '{}'.format(output_name))
-    else:
-        return "Invalid output format."

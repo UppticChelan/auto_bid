@@ -7,17 +7,14 @@ import pandas as pd
 import ruleset
 import boto3
 from botocore.client import Config
+from io import StringIO
 
-#When there are more rulesets, ruleset will be set to another value when options are checked
-UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/uploads/'
-DOWNLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/downloads/'
+s3 = boto3.resource('s3', aws_access_key_id= os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),config=Config(signature_version='s3v4')
 ALLOWED_EXTENSIONS = {'csv'}
 RULESET = os.path.dirname(os.path.abspath(__file__)) + 'ruless.csv'
 
 app = Flask(__name__, static_url_path="/static")
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -35,8 +32,7 @@ def index():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            process_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), filename)
+            processed = process_file(filename)
             return redirect(url_for('uploaded_file', filename=filename))
     return render_template('index.html')
 
@@ -58,7 +54,7 @@ def run_autobid(path, filename):
     df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     ruleset.format_csv(df, rules, app.config['DOWNLOAD_FOLDER'], filename)
-    output_stream = open(app.config['DOWNLOAD_FOLDER'] + filename, 'rb')
+    s3.Bucket(os.environ.get('S3_BUCKET')).put_object(Key='file', Body=f, ContentEncoding='text/csv')
 
 @app.route('/uploads/<filename>')
 def uploaded_file():

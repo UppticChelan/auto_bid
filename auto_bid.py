@@ -17,6 +17,7 @@ def main(argv):
         elif opt in ('-r', '--rulesfile'):
             rulesfile = arg
     df = pd.read_csv(input_file)
+    df['original_bid'] = df['Bid']
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
     group_cols = rules.groupby.split('|')
@@ -24,9 +25,9 @@ def main(argv):
     df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['D7 IAP Revenue'], x['Installs'], rules), axis=1)
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
-    df['final_bid_value'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+    df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
-    ruleset.format_csv(df, rules)
+    df.to_csv('bids_0.csv')
 
 
 def get_baselines(revenue, installs, target_percent):
