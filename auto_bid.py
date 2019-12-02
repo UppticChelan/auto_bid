@@ -42,8 +42,8 @@ def get_baselines(revenue, installs, target_percent):
 
 def apply_bid_logic(bid,installs, baseline, Ruleset):
     if Ruleset.max == 'default':
-        if bid > baseline * 2:
-            bid = baseline * 2
+        if bid > baseline * 2.2:
+            bid = baseline * 2.2
             return bid
         elif installs < Ruleset.install_threshold:
             bid = baseline
