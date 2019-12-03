@@ -1,6 +1,6 @@
 
 import os
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory
+from flask import Flask, request, redirect, url_for, render_template, send_from_directory, Response
 from werkzeug.utils import secure_filename
 from auto_bid import get_baselines, apply_bid_logic
 import pandas as pd
@@ -15,6 +15,13 @@ RULESET = os.path.dirname(os.path.abspath(__file__)) + 'ruless.csv'
 
 app = Flask(__name__, static_url_path="/static")
 
+def get_client():
+    return boto3.client(
+        's3',
+        'us-east-1',
+        aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    )
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -56,6 +63,7 @@ def run_autobid(df):
 
 @app.route('/download')
 def download():
+    s3 = get_client()
     file = s3.get_object(Bucket=os.environ.get('S3_BUCKET'), Key='df.csv')
     return Response(
         file['Body'].read(),
