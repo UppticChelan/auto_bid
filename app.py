@@ -30,24 +30,43 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        print(request)
         if 'file' not in request.files:
             print('No file attached in request')
             return redirect(request.url)
         file = request.files['file']
+
         if file.filename == '':
             print('No file selected')
             return redirect(request.url)
+
         if file and allowed_file(file.filename):
             df = pd.read_csv(file)
-            processed = run_autobid(df)
+            new_rules = {}
+            new_rules['input'] = request.form['input']
+            if request.form['target']:
+                new_rules['target'] = request.form['target']
+            if request.form['max_bid_cap'] and request.form['max_bid_cap_bool'] is not True
+                new_rules['max_bid_cap'] = request.form['max_bid_cap']
+            if request.form['min_bid_cap']:
+                new_rules['min_bid_cap'] = request.form['min_bid_cap']
+            if request.form['install_threshold']:
+                new_rules['install_threshold'] = request.form['install_threshold']
+            processed = run_autobid(df, new_rules)
             return redirect(url_for('download'))
+
     return render_template('index.html')
 
 
-def run_autobid(df):
+def run_autobid(df, new_rules):
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
+    if rule in new_rules.keys() in rules.rulesdict.keys():
+        rules[rule] = new_rules[rule]
     group_cols = rules.groupby.split('|')
+
+    df = format_cols_input(df, rules)
+
     df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     baselines = df.groupby(group_cols).sum().reset_index()
     df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
@@ -55,6 +74,9 @@ def run_autobid(df):
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
     df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
+
+    df = format_cols_output(df, rules)
+
     bucket = os.environ.get('S3_BUCKET')
     csv_buffer = StringIO()
     df.to_csv(csv_buffer)
