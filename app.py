@@ -60,6 +60,13 @@ def get_client():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def save_to_bucket(df, channel, date, campaign):
+    bucket = os.environ.get('S3_BUCKET')
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer)
+    s3_resource = boto3.resource('s3')
+    s3_resource.Object(bucket, '{}{}{}.csv'.format(channel, date, campaign)).put(Body=csv_buffer.getvalue())
+
 def run_autobid(df, new_rules):
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
@@ -79,15 +86,19 @@ def run_autobid(df, new_rules):
     df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     campaign = df['Campaign Name'].iloc[0]
+    channel = rules.output
 
     df = ruleset.format_cols_output(df, rules)
 
-    bucket = os.environ.get('S3_BUCKET')
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
-    s3_resource = boto3.resource('s3')
-    s3_resource.Object(bucket, '{}{}.csv'.format(today, campaign)).put(Body=csv_buffer.getvalue())
-
+    if channel == 'unity':
+        df.sort_values(by='Campaign', axis=1, inplace=True)
+        df.set_index(keys=['Campaign'], drop=False,inplace=True)
+        names=df['Campaign'].unique().tolist()
+        for name in names:
+            name_frame = df.loc[df['Campaign']==name]
+            save_to_bucket(name_frame, channel, today, campaign)
+    else:
+        save_to_bucket(df, channel, today, campaign)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -105,6 +116,7 @@ def index():
             df = pd.read_csv(file)
             new_rules = {}
             new_rules['input'] = request.form['input']
+            new_rules['output'] = request.form['output']
             if request.form['target']:
                 new_rules['target'] = request.form['target']
             if request.form['max_bid_cap'] and request.form['max_bid_cap_bool'] is not True:
