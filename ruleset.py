@@ -62,18 +62,19 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
 
 def format_cols_input(df, ruleset):
     if ruleset.input == 'acquired':
-        df.rename(columns={"Campaign": "Campaign Name", "D7 Total Revenue": "d7_total_revenue"})
+        df = df.rename(columns={"Campaign": "Campaign Name"})
+        print('done')
     return df
 
 def format_cols_output(df, ruleset):
     if ruleset.output == 'unity':
         df = df['Country', 'Site ID', 'Bid']
-        df.rename(columns={"Country": "Country code", "Site ID": "Source ID"})
+        df = df.rename(columns={"Country": "Country code", "Site ID": "Source ID"})
         return df
 
     elif ruleset.output == 'vungle':
         df = df['SubPublisher Name', 'Site ID', 'Country', 'Bid']
-        df.rename(columns={"SubPublisher Name": "name", "Site ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
+        df = df.rename(columns={"SubPublisher Name": "name", "Site ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
         return df
 
     else:
