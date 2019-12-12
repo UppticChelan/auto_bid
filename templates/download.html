@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Download Bid Sheet</title>
+</head>
+<body>
+  <form method=post enctype=multipart/form-data>
+  <select name="file_name">
+  {% for item in items %}
+  <option value="{{ item }}">{{ item }}</option>
+  {% endfor %}
+  </select>
+  <input type="submit" value="Select">
+  <a href="{{ url_for('logout') }}">Logout</a>
+  </form>
+</body>
+</html>

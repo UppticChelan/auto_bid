@@ -8,13 +8,15 @@ class Ruleset():
             reader = csv.reader(infile)
             rules_dict = {rows[0]:rows[1] for rows in reader}
         self.rulesdict = rules_dict
-        self.input = rules_dict['input']
-        self.bid_calc_function = rules_dict['bid_calc_method']
-        self.target = float(rules_dict['target'])
-        self.groupby = rules_dict['group_cols']
-        self.max = rules_dict['max_bid_cap']
-        self.min = float(rules_dict['min_bid_cap'])
-        self.install_threshold = float(rules_dict['install_threshold'])
+    def rules_update(self):
+        self.input = self.rulesdict['input']
+        self.output = self.rulesdict['output']
+        self.bid_calc_function = self.rulesdict['bid_calc_method']
+        self.target = float(self.rulesdict['target'])
+        self.groupby = self.rulesdict['group_cols']
+        self.max = self.rulesdict['max_bid_cap']
+        self.min = float(self.rulesdict['min_bid_cap'])
+        self.install_threshold = float(self.rulesdict['install_threshold'])
 
 def get_baselines(revenue, installs, Ruleset):
     if installs != 0:
@@ -67,12 +69,12 @@ def format_cols_output(df, ruleset):
     if ruleset.output == 'unity':
         df = df['Country', 'Site ID', 'Bid']
         df.rename(columns={"Country": "Country code", "Site ID": "Source ID"})
-    return df
+        return df
 
     elif ruleset.output == 'vungle':
         df = df['SubPublisher Name', 'Site ID', 'Country', 'Bid']
         df.rename(columns={"SubPublisher Name": "name", "Site ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
-    return df
-    
+        return df
+
     else:
         return df
