@@ -88,16 +88,16 @@ def run_autobid(df, new_rules):
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
 
-    df = ruleset.format_cols_output(df, rules)
-
     if channel == 'unity':
-        df.sort_values(by='Campaign', axis=1, inplace=True)
-        df.set_index(keys=['Campaign'], drop=False,inplace=True)
-        names=df['Campaign'].unique().tolist()
+        df.sort_values(by='Campaign Name', axis=0, inplace=True)
+        df.set_index(keys=['Campaign Name'], drop=False,inplace=True)
+        names=df['Campaign Name'].unique().tolist()
         for name in names:
-            name_frame = df.loc[df['Campaign']==name]
-            save_to_bucket(name_frame, channel, today, campaign)
+            name_frame = df.loc[df['Campaign Name']==name]
+            name_frame = ruleset.format_cols_output(name_frame, rules)
+            save_to_bucket(name_frame, channel, today, name)
     else:
+        df = ruleset.format_cols_output(df, rules)
         save_to_bucket(df, channel, today, campaign)
 
 @app.route('/', methods=['GET', 'POST'])
