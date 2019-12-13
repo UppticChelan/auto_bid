@@ -119,8 +119,9 @@ def index():
             new_rules['output'] = request.form['output']
             if request.form['target']:
                 new_rules['target'] = request.form['target']
-            if request.form['max_bid_cap'] and request.form['max_bid_cap_bool'] is not True:
+            if request.form['max_bid_cap']:
                 new_rules['max_bid_cap'] = request.form['max_bid_cap']
+            print(new_rules)
             if request.form['min_bid_cap']:
                 new_rules['min_bid_cap'] = request.form['min_bid_cap']
             if request.form['install_threshold']:
