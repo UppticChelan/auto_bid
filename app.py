@@ -82,6 +82,7 @@ def run_autobid(df, new_rules):
     baselines = df.groupby(group_cols).sum().reset_index()
     df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
+    baselines = baselines[baselines['Installs']>35]
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
     if rules.method == 'hard cutoff':
         df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
@@ -98,7 +99,8 @@ def run_autobid(df, new_rules):
         for name in names:
             name_frame = df.loc[df['Campaign Name']==name]
             name_frame = ruleset.format_cols_output(name_frame, rules)
-            save_to_bucket(name_frame, channel, today, name)
+            name_frame = name_frame.sample(frac=1)
+            save_to_bucket(name_frame.iloc[:3000], channel, today, name)
     else:
         df = ruleset.format_cols_output(df, rules)
         save_to_bucket(df, channel, today, campaign)
