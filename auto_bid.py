@@ -42,6 +42,33 @@ def get_baselines(revenue, installs, target_percent):
         target_cpi = 0.01
     return target_cpi
 
+def weighted_avg_bid(bid, installs, baseline, Ruleset):
+    if Ruleset.max == 'default':
+        if bid > baseline * 2.2:
+            bid = baseline * 2.2
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*unadjusted_bid)
+            new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
+            return new_bid
+    elif float(Ruleset.max) > 0:
+        max_bid = float(Ruleset.max)
+        if bid > max_bid:
+            bid = max_bid
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*unadjusted_bid)
+            new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
+            return new_bid
+    else:
+        return "Invalid max bid value."
+
 def apply_bid_logic(bid,installs, baseline, Ruleset):
     if Ruleset.max == 'default':
         if installs < Ruleset.install_threshold:
@@ -60,8 +87,8 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
         if installs < Ruleset.install_threshold:
             bid = baseline
             return bid
-        elif bid > baseline * 2.2:
-            bid = baseline * 2.2
+        elif bid > max_bid:
+            bid = max_bid
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min

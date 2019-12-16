@@ -1,6 +1,6 @@
 input,ironsource_dash
 output, ironsource
-bid_calc_method,default
+method,hard cutoff
 target,0.66
 group_cols,Campaign Name|Country
 max_bid_cap,default

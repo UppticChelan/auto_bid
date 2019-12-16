@@ -11,7 +11,7 @@ class Ruleset():
     def rules_update(self):
         self.input = self.rulesdict['input']
         self.output = self.rulesdict['output']
-        self.bid_calc_function = self.rulesdict['bid_calc_method']
+        self.method = self.rulesdict['method']
         self.target = float(self.rulesdict['target'])
         self.groupby = self.rulesdict['group_cols']
         self.max = self.rulesdict['max_bid_cap']
@@ -20,16 +20,40 @@ class Ruleset():
 
 def get_baselines(revenue, installs, Ruleset):
     if installs != 0:
-        if Ruleset.bid_calc_function == 'default':
-            d7_arpu = revenue/installs
-            target_cpi = d7_arpu/Ruleset.target
-        else:
-            return "Bid Calculation method not recognized."
+        d7_arpu = revenue/installs
+        target_cpi = d7_arpu/Ruleset.target
     else:
         target_cpi = Ruleset.min
     if target_cpi < Ruleset.min:
         target_cpi = Ruleset.min
     return target_cpi
+
+def weighted_avg_bid(bid, installs, baseline, Ruleset):
+    if Ruleset.max == 'default':
+        if bid > baseline * 2.2:
+            bid = baseline * 2.2
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*bid)
+            new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
+            return new_bid
+    elif float(Ruleset.max) > 0:
+        max_bid = float(Ruleset.max)
+        if bid > max_bid:
+            bid = max_bid
+            return bid
+        elif bid < Ruleset.min:
+            bid = Ruleset.min
+            return bid
+        else:
+            new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*unadjusted_bid)
+            new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
+            return new_bid
+    else:
+        return "Invalid max bid value."
 
 def apply_bid_logic(bid,installs, baseline, Ruleset):
     if Ruleset.max == 'default':

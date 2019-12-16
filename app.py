@@ -83,7 +83,10 @@ def run_autobid(df, new_rules):
     df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
-    df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+    if rules.method == 'hard cutoff':
+        df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+    else:
+        df['Bid'] = df.apply(lambda x: ruleset.weighted_avg_bid(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
@@ -117,6 +120,7 @@ def index():
             new_rules = {}
             new_rules['input'] = request.form['input']
             new_rules['output'] = request.form['output']
+            new_rules['method'] = request.form['method']
             if request.form['target']:
                 new_rules['target'] = request.form['target']
             if request.form['max_bid_cap']:
