@@ -83,7 +83,7 @@ def run_autobid(df, new_rules):
     df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     baselines = baselines[baselines['Installs']>35]
-    df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'])
+    df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
     if rules.method == 'hard cutoff':
         df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     else:
@@ -93,6 +93,7 @@ def run_autobid(df, new_rules):
     channel = rules.output
 
     if channel == 'unity':
+        df = df[df['Installs'] > 0]
         df.sort_values(by='Campaign Name', axis=0, inplace=True)
         df.set_index(keys=['Campaign Name'], drop=False,inplace=True)
         names=df['Campaign Name'].unique().tolist()
