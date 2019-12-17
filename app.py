@@ -68,6 +68,7 @@ def save_to_bucket(df, channel, date, campaign):
     s3_resource.Object(bucket, '{}{}{}.csv'.format(channel, date, campaign)).put(Body=csv_buffer.getvalue())
 
 def run_autobid(df, new_rules):
+    save_to_bucket(df, 'original', today, 'original')
     rules = ruleset.Ruleset()
     rules.makerules('ruless.csv')
     for rule in new_rules.keys():
