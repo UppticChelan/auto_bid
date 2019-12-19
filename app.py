@@ -93,7 +93,7 @@ def run_autobid(df, new_rules):
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
 
-    if channel == 'unity' or 'vungle':
+    if channel == 'unity' or channel == 'vungle':
         df = df[df['Installs'] > 0]
         df.sort_values(by='Campaign Name', axis=0, inplace=True)
         df.set_index(keys=['Campaign Name'], drop=False,inplace=True)
