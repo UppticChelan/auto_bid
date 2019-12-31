@@ -6,6 +6,7 @@ from werkzeug.exceptions import HTTPException
 from auto_bid import get_baselines, apply_bid_logic
 import pandas as pd
 import ruleset
+import ecpm
 import boto3
 from botocore.client import Config
 from io import StringIO
@@ -81,14 +82,26 @@ def run_autobid(df, new_rules):
 
     df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     baselines = df.groupby(group_cols).sum().reset_index()
-    df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
-    baselines = baselines[baselines['Installs']>35]
-    df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
-    if rules.method == 'hard cutoff':
-        df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+    baselines = baselines[baselines['Installs']>15]
+    if rules.use_ecpm == False:
+        df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
+        df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
     else:
-        df['Bid'] = df.apply(lambda x: ruleset.weighted_avg_bid(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+        df['ipm'] = df['Installs']/df['Impressions']*1000
+        df.fillna(0, inplace=True)
+        df['ecpm_bid'] = df.apply(lambda x: ecpm.get_ecpm_bid(x['ipm'],rules), axis=1)
+        df = ecpm.adjust_bid(df, baselines)
+    if rules.method == 'hard cutoff':
+        if rules.use_ecpm == False:
+            df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+        else:
+            df['Bid'] = df.apply(lambda x: ecpm.ecpm_bid_logic(x['ecpm_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+    else:
+        if rules.use_ecpm == False:
+            df['Bid'] = df.apply(lambda x: ruleset.weighted_avg_bid(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+        else:
+            df['Bid'] = df.apply(lambda x: ecpm.ecpm_weighted_avg(x['ecpm_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
@@ -125,11 +138,11 @@ def index():
             new_rules['input'] = request.form['input']
             new_rules['output'] = request.form['output']
             new_rules['method'] = request.form['method']
+            new_rules['use_ecpm'] = request.form['use_ecpm']
             if request.form['target']:
                 new_rules['target'] = request.form['target']
             if request.form['max_bid_cap']:
                 new_rules['max_bid_cap'] = request.form['max_bid_cap']
-            print(new_rules)
             if request.form['min_bid_cap']:
                 new_rules['min_bid_cap'] = request.form['min_bid_cap']
             if request.form['install_threshold']:

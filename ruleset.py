@@ -17,6 +17,9 @@ class Ruleset():
         self.max = self.rulesdict['max_bid_cap']
         self.min = float(self.rulesdict['min_bid_cap'])
         self.install_threshold = float(self.rulesdict['install_threshold'])
+        self.use_ecpm = eval(self.rulesdict['use_ecpm'])
+        self.target_ecpm = eval(self.rulesdict['target_ecpm'])
+
 
 def get_baselines(revenue, installs, Ruleset):
     if installs != 0:
@@ -73,8 +76,8 @@ def apply_bid_logic(bid,installs, baseline, Ruleset):
         if installs < Ruleset.install_threshold:
             bid = baseline
             return bid
-        elif bid > baseline * 2.2:
-            bid = baseline * 2.2
+        elif bid > max_bid:
+            bid = max_bid
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min
