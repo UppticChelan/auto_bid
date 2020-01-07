@@ -33,12 +33,12 @@ def ecpm_weighted_avg(ecpm_bid, installs, roas_bid, Ruleset):
             return new_bid
     elif float(Ruleset.max) > 0:
         max_bid = float(Ruleset.max)
-        if bid > max_bid:
-            bid = max_bid
-            return bid
-        elif bid < Ruleset.min:
-            bid = Ruleset.min
-            return bid
+        if new_bid > max_bid:
+            new_bid = max_bid
+            return new_bid
+        elif new_bid < Ruleset.min:
+            new_bid = Ruleset.min
+            return new_bid
         else:
             return new_bid
     else:
