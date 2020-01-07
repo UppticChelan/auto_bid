@@ -1,6 +1,6 @@
 
 import os
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory, Response, jsonify, session
+from flask import Flask, request, redirect, url_for, render_template, send_from_directory, Response, jsonify, session, flash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
 from auto_bid import get_baselines, apply_bid_logic
@@ -81,27 +81,27 @@ def run_autobid(df, new_rules):
     df = ruleset.format_cols_input(df, rules)
 
     df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
+    df['ipm'] = df['Installs']/df['Impressions']*1000
+    df.fillna(0, inplace=True)
     baselines = df.groupby(group_cols).sum().reset_index()
     baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
-    baselines = baselines[baselines['Installs']>15]
+    baselines = baselines[baselines['Installs']>12]
+    baselines['baseline_ecpm'] = baselines.apply(lambda x: ecpm.get_ecpm_bid(x['ipm'],rules, 2.0), axis=1)
+    df['unadjusted_roas_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
     if rules.use_ecpm == False:
-        df['unadjusted_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
         df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
     else:
-        df['ipm'] = df['Installs']/df['Impressions']*1000
         df.fillna(0, inplace=True)
-        df['ecpm_bid'] = df.apply(lambda x: ecpm.get_ecpm_bid(x['ipm'],rules), axis=1)
-        df = ecpm.adjust_bid(df, baselines)
+        baselines = ecpm.adjust_baselines_by_geo(baselines)
+        df = df.join(baselines[['Campaign Name', 'Country','base_bid', 'baseline_ecpm']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
+        df['ecpm_bid'] = df.apply(lambda x: ecpm.get_ecpm_bid(x['ipm'], rules, x['baseline_ecpm']), axis=1)
     if rules.method == 'hard cutoff':
-        if rules.use_ecpm == False:
-            df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
-        else:
-            df['Bid'] = df.apply(lambda x: ecpm.ecpm_bid_logic(x['ecpm_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+        df['Bid'] = df.apply(lambda x: ecpm.ecpm_bid_logic(x['ecpm_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     else:
         if rules.use_ecpm == False:
-            df['Bid'] = df.apply(lambda x: ruleset.weighted_avg_bid(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+            df['Bid'] = df.apply(lambda x: ruleset.weighted_avg_bid(x['unadjusted_roas_bid'], x['Installs'], x['base_bid'], rules), axis=1)
         else:
-            df['Bid'] = df.apply(lambda x: ecpm.ecpm_weighted_avg(x['ecpm_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+            df['Bid'] = df.apply(lambda x: ecpm.ecpm_weighted_avg(x['ecpm_bid'], x['Installs'], x['unadjusted_roas_bid'], rules), axis=1)
     df = df.round(2)
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
@@ -147,6 +147,9 @@ def index():
                 new_rules['min_bid_cap'] = request.form['min_bid_cap']
             if request.form['install_threshold']:
                 new_rules['install_threshold'] = request.form['install_threshold']
+            if new_rules['use_ecpm']==True and new_rules['method']!='weighted average':
+                flash('ECPM bidder is only intended for use with weighted average! Changing to weighted average method...')
+                new_rules['method']='weighted average'
             processed = run_autobid(df, new_rules)
             return redirect(url_for('download'))
 
