@@ -99,8 +99,8 @@ def format_cols_output(df, ruleset):
         return df
 
     elif ruleset.output == 'vungle':
-        df = df[['SubPublisher Name', 'Site ID', 'Country', 'Bid']]
-        df = df.rename(columns={"SubPublisher Name": "name", "Site ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
+        df = df[['Subpublisher Name', 'Site ID', 'Country', 'Bid']]
+        df = df.rename(columns={"Subpublisher Name": "name", "Site ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
         return df
 
     else:
