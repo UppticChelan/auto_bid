@@ -150,6 +150,7 @@ def index():
             if new_rules['use_ecpm']==True and new_rules['method']!='weighted average':
                 flash('ECPM bidder is only intended for use with weighted average! Changing to weighted average method...')
                 new_rules['method']='weighted average'
+            print(new_rules)
             processed = run_autobid(df, new_rules)
             return redirect(url_for('download'))
 
