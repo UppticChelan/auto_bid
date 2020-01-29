@@ -4,7 +4,7 @@ import ruleset
 
 def get_ecpm_bid(ipm, Ruleset, baseline):
     if ipm > 0:
-        target_cpi = ipm/Ruleset.target_ecpm
+        target_cpi = Ruleset.target_ecpm/ipm
     else:
         target_cpi = baseline
     if target_cpi < Ruleset.min:
