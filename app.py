@@ -83,8 +83,12 @@ def run_autobid(df, new_rules):
     df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     df['ipm'] = df['Installs']/df['Impressions']*1000
     df.fillna(0, inplace=True)
-    baselines = df.groupby(group_cols).sum().reset_index()
-    baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
+    if rules.baseline == 'default':
+        baselines = df.groupby(group_cols).sum().reset_index()
+        baselines['base_bid'] = baselines.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
+    else:
+        baselines = df.groupby(group_cols).sum().reset_index()
+        baselines['base_bid'] = rules.baseline
     baselines = baselines[baselines['Installs']>12]
     baselines['baseline_ecpm'] = baselines.apply(lambda x: ecpm.get_ecpm_bid(x['ipm'],rules, 2.0), axis=1)
     df['unadjusted_roas_bid'] = df.apply(lambda x: ruleset.get_baselines(x['d7_total_revenue'], x['Installs'], rules), axis=1)
@@ -140,7 +144,9 @@ def index():
             new_rules['method'] = request.form['method']
             new_rules['use_ecpm'] = request.form['use_ecpm']
             if request.form['target']:
-                new_rules['target'] = request.form['target']
+                new_rules['target'] = requesst.form['target']
+            if request.form['baseline']:
+                new_rules['baseline'] = request.form['baseline']
             if request.form['max_bid_cap']:
                 new_rules['max_bid_cap'] = request.form['max_bid_cap']
             if request.form['min_bid_cap']:

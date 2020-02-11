@@ -19,6 +19,7 @@ class Ruleset():
         self.install_threshold = float(self.rulesdict['install_threshold'])
         self.use_ecpm = eval(self.rulesdict['use_ecpm'])
         self.target_ecpm = eval(self.rulesdict['target_ecpm'])
+        self.baseline = eval(self.rulesdict['baseline'])
 
 
 def get_baselines(revenue, installs, Ruleset):
