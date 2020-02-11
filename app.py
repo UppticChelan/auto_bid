@@ -144,7 +144,7 @@ def index():
             new_rules['method'] = request.form['method']
             new_rules['use_ecpm'] = request.form['use_ecpm']
             if request.form['target']:
-                new_rules['target'] = requesst.form['target']
+                new_rules['target'] = request.form['target']
             if request.form['baseline']:
                 new_rules['baseline'] = request.form['baseline']
             if request.form['max_bid_cap']:
