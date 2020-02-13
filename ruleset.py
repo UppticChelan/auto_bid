@@ -33,6 +33,7 @@ def get_baselines(revenue, installs, Ruleset):
     return target_cpi
 
 def weighted_avg_bid(bid, installs, baseline, Ruleset):
+    baseline = float(baseline)
     if Ruleset.max == 'default':
         if bid > baseline * 2.2:
             bid = baseline * 2.2
