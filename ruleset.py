@@ -61,6 +61,7 @@ def weighted_avg_bid(bid, installs, baseline, Ruleset):
         return "Invalid max bid value."
 
 def apply_bid_logic(bid,installs, baseline, Ruleset):
+    baseline = float(baseline)
     if Ruleset.max == 'default':
         if installs < Ruleset.install_threshold:
             bid = baseline
