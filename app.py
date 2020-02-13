@@ -100,7 +100,7 @@ def run_autobid(df, new_rules):
         df = df.join(baselines[['Campaign Name', 'Country','base_bid', 'baseline_ecpm']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
         df['ecpm_bid'] = df.apply(lambda x: ecpm.get_ecpm_bid(x['ipm'], rules, x['baseline_ecpm']), axis=1)
     if rules.method == 'hard cutoff':
-        df['Bid'] = df.apply(lambda x: ecpm.ecpm_bid_logic(x['ecpm_bid'], x['Installs'], x['base_bid'], rules), axis=1)
+         df['Bid'] = df.apply(lambda x: ruleset.apply_bid_logic(x['unadjusted_roas_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     else:
         if rules.use_ecpm == False:
             df['Bid'] = df.apply(lambda x: ruleset.weighted_avg_bid(x['unadjusted_roas_bid'], x['Installs'], x['base_bid'], rules), axis=1)
