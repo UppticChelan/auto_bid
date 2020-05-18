@@ -98,6 +98,11 @@ def run_autobid(df, new_rules):
         df.fillna(0, inplace=True)
         baselines = auto_bid.adjust_baselines_by_geo(baselines)
         df['unadjusted_bid'] = df.apply(lambda x: auto_bid.get_ecpm_bid(x['ipm'], rules, x['baseline_ecpm']), axis=1)
+    elif rules.bid_calculation_method == "cpa":
+        df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
+        df.fillna(0, inplace=True)
+        df['cpa_mod'] = df.apply(lambda x: auto_bid.generate_cpa_mod(rules.target, x['purchasers'], x['installs']), axis=1)
+        df['unadjusted_bid'] = df['cpa_mod']*df['base_bid']
     else:
         df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
         df.fillna(0, inplace=True)

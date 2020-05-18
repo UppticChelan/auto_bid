@@ -12,6 +12,10 @@ def generate_roas_bids(revenue, installs, target_percent):
         target_cpi = 0.01
     return target_cpi
 
+def generate_cpa_mod(target_cpa, purchasers, installs):
+    bid_modifier = target_cpa*(purchasers/installs)
+    return bid_modifier
+
 def weighted_avg_bid(bid, installs, baseline, Ruleset):
         new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*bid)
         new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
