@@ -18,16 +18,15 @@
             <option value="unity">Unity</option>
             <option value="vungle">Vungle</option>
        </select>
-       <p>Bid Calculation Method<p><select name="method">
+       <p>Install Bias Method<p><select name="install_bias_method">
             <option value="hard cutoff">Hard Cutoff(default)</option>
             <option value="weighted average">Weighted Average</option>
        </select>
-       <p>Use ECPM?<p><select name="use_ecpm">
-            <option value="False">False</option>
-            <option value="True">True</option>
+       <p>Bid Calculation Method<p><select name="bid_calculation_method">
+            <option value="roas">ROAS</option>
+            <option value="ecpm">ECPM</option>
        </select>
-       <p>Target ECPM<p><input type="text" name="target_ecpm"></input>
-       <p>Target D7 ROAS<p><input type="text" name="target"></input>
+       <p>Target<p><input type="text" name="target"></input>
        <p>Custom Baseline<p><input type="text" name="baseline"></input>
        <p>Custom Maximum Bid Value<p><input type="text" name="max_bid_cap"></input>
        <p>Minimum Bid Value<p><input type="text" name="min_bid_cap"></input>

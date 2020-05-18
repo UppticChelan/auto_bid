@@ -1,11 +1,10 @@
 input,ironsource_dash
 output, ironsource
-method,hard cutoff
+install_bias_method,hard cutoff
 target,0.66
 group_cols,Campaign Name|Country
 max_bid_cap,default
 min_bid_cap,0.01
 install_threshold,50
-use_ecpm, False
-target_ecpm, 15
 baseline,default
+bid_calculation_method, roas

@@ -11,84 +11,14 @@ class Ruleset():
     def rules_update(self):
         self.input = self.rulesdict['input']
         self.output = self.rulesdict['output']
-        self.method = self.rulesdict['method']
+        self.install_bias_method = self.rulesdict['install_bias_method']
         self.target = float(self.rulesdict['target'])
         self.groupby = self.rulesdict['group_cols']
         self.max = self.rulesdict['max_bid_cap']
         self.min = float(self.rulesdict['min_bid_cap'])
         self.install_threshold = float(self.rulesdict['install_threshold'])
-        self.use_ecpm = eval(self.rulesdict['use_ecpm'])
-        self.target_ecpm = eval(self.rulesdict['target_ecpm'])
+        self.bid_calculation_method = self.rulesdict['bid_calculation_method']
         self.baseline = self.rulesdict['baseline']
-
-
-def get_baselines(revenue, installs, Ruleset):
-    if installs != 0:
-        d7_arpu = revenue/installs
-        target_cpi = d7_arpu/Ruleset.target
-    else:
-        target_cpi = Ruleset.min
-    if target_cpi < Ruleset.min:
-        target_cpi = Ruleset.min
-    return target_cpi
-
-def weighted_avg_bid(bid, installs, baseline, Ruleset):
-    baseline = float(baseline)
-    if Ruleset.max == 'default':
-        if bid > baseline * 2.2:
-            bid = baseline * 2.2
-            return bid
-        elif bid < Ruleset.min:
-            bid = Ruleset.min
-            return bid
-        else:
-            new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*bid)
-            new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
-            return new_bid
-    elif float(Ruleset.max) > 0:
-        max_bid = float(Ruleset.max)
-        if bid > max_bid:
-            bid = max_bid
-            return bid
-        elif bid < Ruleset.min:
-            bid = Ruleset.min
-            return bid
-        else:
-            new_bid_numer = (Ruleset.install_threshold*baseline)+(installs*bid)
-            new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
-            return new_bid
-    else:
-        return "Invalid max bid value."
-
-def apply_bid_logic(bid,installs, baseline, Ruleset):
-    baseline = float(baseline)
-    if Ruleset.max == 'default':
-        if installs < Ruleset.install_threshold:
-            bid = baseline
-            return bid
-        elif bid > baseline * 2.2:
-            bid = baseline * 2.2
-            return bid
-        elif bid < Ruleset.min:
-            bid = Ruleset.min
-            return bid
-        else:
-            return bid
-    elif float(Ruleset.max) > 0:
-        max_bid = float(Ruleset.max)
-        if installs < Ruleset.install_threshold:
-            bid = baseline
-            return bid
-        elif bid > max_bid:
-            bid = max_bid
-            return bid
-        elif bid < Ruleset.min:
-            bid = Ruleset.min
-            return bid
-        else:
-            return bid
-    else:
-        return "Invalid max bid value."
 
 def format_cols_input(df, ruleset):
     if ruleset.input == 'acquired':
