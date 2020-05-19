@@ -21,17 +21,13 @@ def weighted_avg_bid(bid, installs, baseline, Ruleset):
         new_bid = new_bid_numer/(Ruleset.install_threshold+installs)
         return new_bid
 
-def modify_bids(bid,installs, baseline, Ruleset, adjustment = True):
-    if adjustment == True:
-        baseline_adj = (installs*0.01)+1
-    else:
-        baseline_adj = 1
+def modify_bids(bid,installs, baseline, Ruleset):
     if Ruleset.max == 'default':
         if installs < Ruleset.install_threshold:
             bid = baseline
             return bid
-        elif bid > baseline * baseline_adj:
-            bid = baseline * baseline_adj
+        elif bid > baseline:
+            bid = baseline
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min
