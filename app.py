@@ -111,7 +111,7 @@ def run_autobid(df, new_rules):
     if rules.install_bias_method == 'hard cutoff':
          df[df['Bid']<rules.install_threshold]['Bid'] = df[df['Bid']<rules.install_threshold]['base_bid']
     else:
-        df['Bid'] = df.apply(lambda x: auto_bid.weighted_average_bid(x['Bid'], x['Installs'], x['base_bid'], new_rules), axis=1)
+        df['Bid'] = df.apply(lambda x: auto_bid.weighted_avg_bid(x['Bid'], x['Installs'], x['base_bid'], new_rules), axis=1)
     df = df.round(2)
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
