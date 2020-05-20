@@ -107,11 +107,11 @@ def run_autobid(df, new_rules):
         df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
         df.fillna(0, inplace=True)
         df['unadjusted_bid'] = df.apply(lambda x: auto_bid.generate_roas_bids(x['d7_total_revenue'], x['Installs'], rules.target), axis=1)
-    df['Bid'] = df.apply(lambda x: auto_bid.modify_bids(x['unadjusted_bid'], x['Installs'], x['base_bid'], new_rules), axis=1)
+    df['Bid'] = df.apply(lambda x: auto_bid.modify_bids(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     if rules.install_bias_method == 'hard cutoff':
          df[df['Bid']<rules.install_threshold]['Bid'] = df[df['Bid']<rules.install_threshold]['base_bid']
     else:
-        df['Bid'] = df.apply(lambda x: auto_bid.weighted_avg_bid(x['Bid'], x['Installs'], x['base_bid'], new_rules), axis=1)
+        df['Bid'] = df.apply(lambda x: auto_bid.weighted_avg_bid(x['Bid'], x['Installs'], x['base_bid'], rules), axis=1)
     df = df.round(2)
     campaign = df['Campaign Name'].iloc[0]
     channel = rules.output
