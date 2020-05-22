@@ -90,7 +90,7 @@ def run_autobid(df, new_rules):
         baselines['base_bid'] = baselines.apply(lambda x: auto_bid.generate_roas_bids(x['d7_total_revenue'], x['Installs'], rules.target), axis=1)
     else:
         baselines = df.groupby(group_cols).sum().reset_index()
-        baselines['base_bid'] = rules.baseline
+        baselines['base_bid'] = float(rules.baseline)
     baselines = baselines[baselines['Installs']>4]
     baselines['baseline_cpi'] = baselines.apply(lambda x: auto_bid.generate_target_cpi(x['ipm'],rules), axis=1)
     if rules.bid_calculation_method == "ecpm":

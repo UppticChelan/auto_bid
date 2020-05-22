@@ -18,7 +18,7 @@ class Ruleset():
         self.min = float(self.rulesdict['min_bid_cap'])
         self.install_threshold = float(self.rulesdict['install_threshold'])
         self.bid_calculation_method = self.rulesdict['bid_calculation_method']
-        self.baseline = float(self.rulesdict['baseline'])
+        self.baseline = self.rulesdict['baseline']
 
 def format_cols_input(df, ruleset):
     if ruleset.input == 'acquired':
