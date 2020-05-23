@@ -26,8 +26,8 @@ def modify_bids(bid,installs, baseline, Ruleset):
         if installs < Ruleset.install_threshold:
             bid = baseline
             return bid
-        elif bid > baseline:
-            bid = baseline
+        elif bid > baseline*2.2:
+            bid = baseline*2.2
             return bid
         elif bid < Ruleset.min:
             bid = Ruleset.min
