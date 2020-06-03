@@ -25,6 +25,7 @@ def format_cols_input(df, ruleset):
         df = df.rename(columns={"Campaign": "Campaign Name"})
     if ruleset.input == 'big_query':
         df = df.rename(columns={"tracker_campaign_id": "Campaign ID", "country_field":"Country", "clean_subpub":"Application ID", "d7":"d7_total_revenue", "installs":"Installs"})
+        df['Country'] = df['Country'].str[:2]
     return df
 
 def format_cols_output(df, ruleset):
