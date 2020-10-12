@@ -22,7 +22,7 @@ class Ruleset():
 
 def format_cols_input(df, ruleset):
     if ruleset.input == 'tableau':
-        df = df.rename(columns={"campaign_name": "Campaign Name", "campaign_id": "Campaign ID", "country":"Country", "publisher_id(_)":"Application ID", "Revenue":"d7_total_revenue"})
+        df = df.rename(columns={"campaign_name": "Campaign Name", "campaign_id": "Campaign ID", "country":"Country", "publisher_id(_)":"Application ID", "revenue":"d7_total_revenue"})
     if ruleset.input == 'big_query':
         df = df.rename(columns={"tracker_campaign_name": "Campaign Name", "tracker_campaign_id": "Campaign ID", "country_field":"Country", "publisher_id":"Application ID", "Revenue":"d7_total_revenue", "installs":"Installs"})
         df['Country'] = df['Country'].str[:2]

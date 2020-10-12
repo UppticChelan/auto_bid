@@ -78,8 +78,9 @@ def run_autobid(df, new_rules):
 
     df = ruleset.format_cols_input(df, rules)
     df.fillna(0, inplace=True)
-    if 'revenue' not in df.columns:
-        df['revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
+    print(df.columns)
+    if 'd7_total_revenue' not in df.columns:
+        df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     if 'Impressions' in df.columns:
         df['ipm'] = df['Installs']/pd.to_numeric(df['Impressions'])*1000
     else:
@@ -89,7 +90,7 @@ def run_autobid(df, new_rules):
         print(df.columns)
         baselines = df.groupby(group_cols).sum().reset_index()
         print(baselines.columns)
-        baselines['base_bid'] = baselines.apply(lambda x: auto_bid.generate_roas_bids(x['revenue'], x['Installs'], rules.target), axis=1)
+        baselines['base_bid'] = baselines.apply(lambda x: auto_bid.generate_roas_bids(x['d7_total_revenue'], x['Installs'], rules.target), axis=1)
     else:
         baselines = df.groupby(group_cols).sum().reset_index()
         baselines['base_bid'] = float(rules.baseline)
@@ -108,7 +109,7 @@ def run_autobid(df, new_rules):
     else:
         df = df.join(baselines[['Campaign Name', 'Country','base_bid']].set_index(['Campaign Name', 'Country']), on=['Campaign Name', 'Country'], how='inner')
         df.fillna(0, inplace=True)
-        df['unadjusted_bid'] = df.apply(lambda x: auto_bid.generate_roas_bids(x['revenue'], x['Installs'], rules.target), axis=1)
+        df['unadjusted_bid'] = df.apply(lambda x: auto_bid.generate_roas_bids(x['d7_total_revenue'], x['Installs'], rules.target), axis=1)
     df['Bid'] = df.apply(lambda x: auto_bid.modify_bids(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
     if rules.install_bias_method == 'hard cutoff':
          df[df['Bid']<rules.install_threshold]['Bid'] = df[df['Bid']<rules.install_threshold]['base_bid']
