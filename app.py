@@ -145,8 +145,7 @@ def index():
             return redirect(request.url)
 
         if file and allowed_file(file.filename):
-            df = pd.read_csv(file)
-            df = df.dropna()
+            df = pd.read_csv(file).dropna()
             new_rules = {}
             new_rules['input'] = request.form['input']
             new_rules['output'] = request.form['output']
