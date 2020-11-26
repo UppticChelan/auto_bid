@@ -78,7 +78,6 @@ def run_autobid(df, new_rules):
 
     df = ruleset.format_cols_input(df, rules)
     df.fillna(0, inplace=True)
-    print(df.columns)
     if 'd7_total_revenue' not in df.columns:
         df['d7_total_revenue'] = df['D7 IAP Revenue'] + df['D7 Ad Revenue']
     if 'Impressions' in df.columns:
