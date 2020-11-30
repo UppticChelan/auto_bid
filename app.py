@@ -86,9 +86,7 @@ def run_autobid(df, new_rules):
         df['ipm'] = 0
 
     if rules.baseline == 'default':
-        print(df.columns)
         baselines = df.groupby(group_cols).sum().reset_index()
-        print(baselines.columns)
         baselines['base_bid'] = baselines.apply(lambda x: auto_bid.generate_roas_bids(x['d7_total_revenue'], x['Installs'], rules.target), axis=1)
     else:
         baselines = df.groupby(group_cols).sum().reset_index()

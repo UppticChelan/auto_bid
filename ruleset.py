@@ -24,6 +24,7 @@ def format_cols_input(df, ruleset):
     if ruleset.input == 'tableau':
         df = df.rename(columns={"campaign_name": "Campaign Name", "campaign_id": "Campaign ID", "country":"Country", "publisher_id(_)":"Application ID", "revenue":"d7_total_revenue"})
         df = df.groupby(['Campaign Name', 'Campaign ID', 'Country', 'Application ID']).sum().reset_index()
+        df['Country'] = df['Country'].str[:2]
     if ruleset.input == 'big_query':
         df = df.rename(columns={"tracker_campaign_name": "Campaign Name", "tracker_campaign_id": "Campaign ID", "country_field":"Country", "publisher_id":"Application ID", "Revenue":"d7_total_revenue", "installs":"Installs"})
         df['Country'] = df['Country'].str[:2]
@@ -34,12 +35,21 @@ def format_cols_input(df, ruleset):
 def format_cols_output(df, ruleset):
     if ruleset.output == 'unity':
         df = df[['Country', 'Application ID', 'Bid']]
-        df = df.rename(columns={"Country": "Country code", "Site ID": "Source ID"})
+        df = df.rename(columns={"Country": "Country code", "Application ID": "Source ID"})
         return df
 
     elif ruleset.output == 'vungle':
+        df = df[['publisher_name','Application ID', 'Country', 'Bid']]
+        df = df.rename(columns={"publisher_name": "name", "Application ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
+        return df
+
+    elif ruleset.output == 'ad_colony':
+        df['campaign_name'] = ''
+        df['app_nundle_id'] = ''
+        df['zone_name'] = ''
+        df['zone_uuid'] = ''
         df = df[['Application ID', 'Country', 'Bid']]
-        df = df.rename(columns={"Subpublisher Name": "name", "Site ID": "pub_app_id", "Country":"geo", "Bid":"rate"})
+        df = df.rename(columns={"Application ID": "hashed_app_id", "Country":"country", "Bid":"cpi_bid"})
         return df
 
     else:
