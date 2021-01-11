@@ -11,7 +11,7 @@ from io import StringIO
 from functools import wraps
 import json
 from dotenv import load_dotenv, find_dotenv
-from authlib.flask.client import OAuth
+from authlib.integrations.flask_client import OAuth
 from six.moves.urllib.parse import urlencode
 from datetime import date
 
@@ -108,8 +108,14 @@ def run_autobid(df, new_rules):
         df.fillna(0, inplace=True)
         df['unadjusted_bid'] = df.apply(lambda x: auto_bid.generate_roas_bids(x['d7_total_revenue'], x['Installs'], rules.target), axis=1)
         if rules.install_bias_method == 'hard cutoff':
-             df[df['Bid']<rules.install_threshold]['unadjusted_bid'] = df[df['unadjusted_bid']<rules.install_threshold]['base_bid']
-             df['Bid'] = df.apply(lambda x: auto_bid.modify_bids(x['unadjusted_bid'], x['Installs'], x['Bid'], rules), axis=1)
+            bids = []
+            for index, row in df.iterrows():
+                if row['Installs'] < rules.install_threshold:
+                    bids.append(row['base_bid'])
+                else:
+                    bids.append(row['unadjusted_bid'])
+            df['Bid'] = bids
+            df['Bid'] = df.apply(lambda x: auto_bid.modify_bids(x['unadjusted_bid'], x['Installs'], x['Bid'], rules), axis=1)
         else:
             df['Bid'] = df.apply(lambda x: auto_bid.weighted_avg_bid(x['unadjusted_bid'], x['Installs'], x['base_bid'], rules), axis=1)
             df['Bid'] = df.apply(lambda x: auto_bid.modify_bids(x['unadjusted_bid'], x['Installs'], x['Bid'], rules), axis=1)
